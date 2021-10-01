@@ -174,7 +174,6 @@ const addSolanoMetadata = (_dna, _edition) => {
 
 const addAttributes = (_element) => {
   let selectedElement = _element.layer.selectedElement;
-  console.log(_element);
   attributesList.push({
     trait_type: _element.layer.name,
     value: selectedElement.name,
@@ -250,7 +249,6 @@ const writeSolanoMetaData = (_data) => {
 
 const saveMetaDataSingleFile = (_editionCount) => {
   let metadata = metadataList.find((meta) => meta.edition == _editionCount);
-  console.log(metadata)
   debugLogs
     ? console.log(
         `Writing metadata for ${_editionCount}: ${JSON.stringify(metadata)}`
