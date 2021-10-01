@@ -27,6 +27,8 @@ const {
 const canvas = createCanvas(format.width, format.height);
 const ctx = canvas.getContext("2d");
 var metadataList = [];
+var solanoMetadataList = [];
+var solanoAttributesList = [];
 var attributesList = [];
 var dnaList = [];
 
@@ -36,6 +38,7 @@ const buildSetup = () => {
   }
   fs.mkdirSync(buildDir);
   fs.mkdirSync(path.join(buildDir, "/json"));
+  fs.mkdirSync(path.join(buildDir, "/solano_json"));
   fs.mkdirSync(path.join(buildDir, "/images"));
 };
 
@@ -123,12 +126,63 @@ const addMetadata = (_dna, _edition) => {
   attributesList = [];
 };
 
+const addSolanoMetadata = (_dna, _edition) => {
+  let tempMetadata = {
+    name: `GeoFig Edition #${_edition}`,
+    description: "The next step to linking cryptocurrency, geocaching, and AR while bringing the entire world together on an adventure.",
+    symbol : "",
+    seller_fee_basis_points : 0.5,
+    attributes: solanoAttributesList,
+    collection: 
+    {
+    name: 'Eikona Giveaway+Initial 100 Collection',
+    family: 'GeoFigs'
+    },
+    image: _edition + '.png',
+    properties: 
+    {
+    	files: 
+    	[{
+    		uri: _edition + '.png',
+    		type: 'image/png'
+    	}],
+    	creators:
+    	[
+    	{
+    	address: '26rsVBTGoqqv1CGMSJqfgbuHrkukydWaU99Gt94srDVy',
+    	share: 67.5
+    	},
+    	{
+    	address: 'zvU55GhqT6cdF7GpKy96mkz7Mhh3FUAN7b8DCDDkauK',
+    	share: 22.5
+    	},
+    	{
+    	address: 'D4jeP1y9Bf7mZ1GggxpdqvDLfZRb3UevPXdcixePnSat',
+    	share: 10
+    	}
+    	]
+    },
+    category: "image"
+  };
+  solanoMetadataList.push(tempMetadata);
+  solanoAttributesList = [];
+}
+
+
+
+
+
 const addAttributes = (_element) => {
   let selectedElement = _element.layer.selectedElement;
+  console.log(_element);
   attributesList.push({
     trait_type: _element.layer.name,
     value: selectedElement.name,
   });
+  solanoAttributesList.push({
+    trait_type: _element.layer.name,
+    value: selectedElement.name,
+  })
 };
 
 const loadLayerImg = async (_layer) => {
@@ -190,9 +244,13 @@ const createDna = (_layers) => {
 const writeMetaData = (_data) => {
   fs.writeFileSync(`${buildDir}/json/_metadata.json`, _data);
 };
+const writeSolanoMetaData = (_data) => {
+  fs.writeFileSync(`${buildDir}/json/_metadataSolano.json`, _data);
+};
 
 const saveMetaDataSingleFile = (_editionCount) => {
   let metadata = metadataList.find((meta) => meta.edition == _editionCount);
+  console.log(metadata)
   debugLogs
     ? console.log(
         `Writing metadata for ${_editionCount}: ${JSON.stringify(metadata)}`
@@ -202,6 +260,15 @@ const saveMetaDataSingleFile = (_editionCount) => {
     `${buildDir}/json/${_editionCount}.json`,
     JSON.stringify(metadata, null, 2)
   );
+};
+const saveSolanoMetaDataSingleFile = (_editionCount) => {
+  let metadata = solanoMetadataList.find((meta) => meta.name.includes(_editionCount) == true);
+  debugLogs
+    ? console.log(
+        `Writing Solano metadata for ${_editionCount}: ${JSON.stringify(metadata)}`
+      )
+    : null;
+  fs.writeFileSync(`${buildDir}/solano_json/${_editionCount}.json`, JSON.stringify(metadata, null, 2));
 };
 
 function shuffle(array) {
@@ -266,7 +333,9 @@ const startCreating = async () => {
             : null;
           saveImage(abstractedIndexes[0]);
           addMetadata(newDna, abstractedIndexes[0]);
+          addSolanoMetadata(newDna, abstractedIndexes[0]);
           saveMetaDataSingleFile(abstractedIndexes[0]);
+          saveSolanoMetaDataSingleFile(abstractedIndexes[0]);
           console.log(
             `Created edition: ${abstractedIndexes[0]}, with DNA: ${sha1(
               newDna.join("")
@@ -290,6 +359,8 @@ const startCreating = async () => {
     layerConfigIndex++;
   }
   writeMetaData(JSON.stringify(metadataList, null, 2));
+  writeSolanoMetaData(JSON.stringify(solanoMetadataList, null, 2));
+
 };
 
 module.exports = { startCreating, buildSetup, getElements };
